@@ -27,8 +27,10 @@ class My_build_ext(_build_ext):
         _build_ext.finalize_options(self)
 
         # Prevent numpy from thinking it is still in its setup process:
-
-        __builtins__.__NUMPY_SETUP__ = False
+        if isinstance(__builtins__, dict):
+            __builtins__["__NUMPY_SETUP__"] = False
+        else:
+            __builtins__.__NUMPY_SETUP__ = False
 
         import numpy
 
