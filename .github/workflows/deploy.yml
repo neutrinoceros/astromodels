@@ -14,8 +14,6 @@ on:
     schedule:
         - cron: "0 11 * * *"
 
-jobs:
-
 permissions: {}
 
 jobs:
