@@ -17,117 +17,117 @@ on:
 permissions: {}
 
 jobs:
-  build_wheels:
-    name: Build ${{matrix.select}}-${{ matrix.archs }} wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        - os: ubuntu-latest
-          archs: x86_64
-          select: '*manylinux*'
-          id: manylinux_x86_64
-        - os: ubuntu-latest
-          archs: x86_64
-          select: '*musllinux*'
-          id: musllinux_x86_64
-        - os: ubuntu-24.04-arm
-          archs: aarch64
-          select: '*manylinux*'
-          id: manylinux_aarch64
-        - os: ubuntu-24.04-arm
-          archs: aarch64
-          select: '*musllinux*'
-          id: musllinux_aarch64
-        - os: macos-15-intel
-          archs: x86_64
-          select: '*'
-          id: macos_x86_64
-        - os: macos-latest
-          archs: arm64
-          select: '*'
-          id: macos_arm64
-        - os: windows-latest
-          archs: AMD64
-          select: '*'
-          id: windows_AMD64
-        - os: windows-11-arm
-          archs: ARM64
-          select: '*'
-          id: windows_ARM64
+    build_wheels:
+      name: Build ${{matrix.select}}-${{ matrix.archs }} wheels on ${{ matrix.os }}
+      runs-on: ${{ matrix.os }}
+      timeout-minutes: 10
+      strategy:
+        fail-fast: false
+        matrix:
+          include:
+          - os: ubuntu-latest
+            archs: x86_64
+            select: '*manylinux*'
+            id: manylinux_x86_64
+          - os: ubuntu-latest
+            archs: x86_64
+            select: '*musllinux*'
+            id: musllinux_x86_64
+          - os: ubuntu-24.04-arm
+            archs: aarch64
+            select: '*manylinux*'
+            id: manylinux_aarch64
+          - os: ubuntu-24.04-arm
+            archs: aarch64
+            select: '*musllinux*'
+            id: musllinux_aarch64
+          - os: macos-15-intel
+            archs: x86_64
+            select: '*'
+            id: macos_x86_64
+          - os: macos-latest
+            archs: arm64
+            select: '*'
+            id: macos_arm64
+          - os: windows-latest
+            archs: AMD64
+            select: '*'
+            id: windows_AMD64
+          - os: windows-11-arm
+            archs: ARM64
+            select: '*'
+            id: windows_ARM64
 
-    steps:
-    - name: Checkout repo
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      with:
-        persist-credentials: false
-    - name: Build wheels for CPython
-      uses: pypa/cibuildwheel@1828c10ab37f080699c7b81cea34097c684a7074 # v4.2.0
-      env:
-        CIBW_ARCHS: ${{ matrix.archs }}
-        CIBW_BUILD: ${{ matrix.select }}
-      with:
-        extras: uv
-        output-dir: dist
-    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      with:
-        name: wheels-${{ matrix.os }}-${{ matrix.id }}
-        path: dist/*.whl
+      steps:
+      - name: Checkout repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build wheels for CPython
+        uses: pypa/cibuildwheel@1828c10ab37f080699c7b81cea34097c684a7074 # v4.2.0
+        env:
+          CIBW_ARCHS: ${{ matrix.archs }}
+          CIBW_BUILD: ${{ matrix.select }}
+        with:
+          extras: uv
+          output-dir: dist
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: wheels-${{ matrix.os }}-${{ matrix.id }}
+          path: dist/*.whl
 
-  build_sdist:
-    name: Build source distribution
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repo
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      with:
-        persist-credentials: false
-    - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-      with:
-        enable-cache: false
-    - name: Build sdist
-      run: |
-        uv sync --only-dev
-        uv build --sdist
-        uvx twine check dist/*
-    - name: Upload sdist
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      with:
-        name: sdist
-        path: dist/*.tar.gz
+    build_sdist:
+      name: Build source distribution
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: false
+      - name: Build sdist
+        run: |
+          uv sync --only-dev
+          uv build --sdist
+          uvx twine check dist/*
+      - name: Upload sdist
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sdist
+          path: dist/*.tar.gz
 
-  deploy:
-    name: Publish to PyPI
-    needs:
-    - build_wheels
-    - build_sdist
-    environment:
-      name: pypi
-      url: https://pypi.org/p/astromodels
-    permissions:
-      # IMPORTANT: this permission is mandatory for trusted publishing
-      id-token: write
+    deploy:
+      name: Publish to PyPI
+      needs:
+      - build_wheels
+      - build_sdist
+      environment:
+        name: pypi
+        url: https://pypi.org/p/astromodels
+      permissions:
+        # IMPORTANT: this permission is mandatory for trusted publishing
+        id-token: write
 
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
-    steps:
-    - name: Download sdist
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-      with:
-        name: sdist
-        path: dist
+      runs-on: ubuntu-latest
+      if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+      steps:
+      - name: Download sdist
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: sdist
+          path: dist
 
-    - name: Download wheels
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-      with:
-        path: dist
-        pattern: wheels-*
-        merge-multiple: true
+      - name: Download wheels
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: dist
+          pattern: wheels-*
+          merge-multiple: true
 
-    - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
 
 
     build-conda:
